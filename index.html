@@ -4,7 +4,191 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>推箱子小游戏</title>
-    <link rel="stylesheet" href="style.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .moves-counter,
+        .boxes-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .game-board {
+            display: grid;
+            gap: 2px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 0 auto;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+        }
+
+        .floor { background: #4a5568; }
+        .wall {
+            background: linear-gradient(145deg, #718096, #4a5568);
+        }
+
+        .target {
+            background: #48bb78;
+        }
+
+        .target::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 3px dashed #fff;
+            border-radius: 50%;
+        }
+
+        .player {
+            background: #4299e1;
+            border-radius: 50%;
+            z-index: 10;
+        }
+
+        .player::before {
+            content: '😊';
+            font-size: 24px;
+        }
+
+        .box {
+            background: linear-gradient(145deg, #e53e3e, #c53030);
+            border-radius: 5px;
+        }
+
+        .box::before {
+            content: '📦';
+            font-size: 24px;
+        }
+
+        .box-on-target {
+            background: linear-gradient(145deg, #48bb78, #38a169);
+        }
+
+        .box-on-target::before {
+            content: '✅';
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 25px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: #4299e1; color: #fff; }
+        .btn-secondary { background: #718096; color: #fff; }
+        .btn-success { background: #48bb78; color: #fff; }
+
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(3, 60px);
+            gap: 5px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .mobile-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            font-size: 24px;
+        }
+
+        .mobile-btn.up { grid-column: 2; grid-row: 1; }
+        .mobile-btn.left { grid-column: 1; grid-row: 2; }
+        .mobile-btn.right { grid-column: 3; grid-row: 2; }
+        .mobile-btn.down { grid-column: 2; grid-row: 3; }
+
+        .win-message {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .win-message.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .win-content {
+            background: linear-gradient(145deg, #48bb78, #38a169);
+            padding: 40px 60px;
+            border-radius: 20px;
+            color: #fff;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .mobile-controls { display: grid; }
+            .cell { width: 30px; height: 30px; }
+        }
+    </style>
 </head>
 <body>
     <div class="game-container">
@@ -49,6 +233,250 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        class SokobanGame {
+            constructor() {
+                this.board = document.getElementById('gameBoard');
+
+                this.levels = [
+                    {
+                        width: 8,
+                        height: 6,
+                        map: [
+                            [1,1,1,1,1,1,1,1],
+                            [1,0,0,0,0,0,0,1],
+                            [1,0,4,2,4,0,0,1],
+                            [1,0,3,0,4,0,0,1],
+                            [1,0,0,2,0,0,0,1],
+                            [1,1,1,1,1,1,1,1]
+                        ]
+                    },
+                    {
+                        width: 10,
+                        height: 8,
+                        map: [
+                            [1,1,1,1,1,1,1,1,1,1],
+                            [1,0,0,0,0,0,0,0,0,1],
+                            [1,0,4,2,3,4,0,0,0,1],
+                            [1,0,0,0,2,4,2,0,0,1],
+                            [1,0,0,0,0,4,0,0,0,1],
+                            [1,0,0,2,4,2,0,0,0,1],
+                            [1,0,0,0,0,0,0,0,0,1],
+                            [1,1,1,1,1,1,1,1,1,1]
+                        ]
+                    }
+                ];
+
+                this.currentLevel = 0;
+                this.player = { x: 0, y: 0 };
+                this.boxes = [];
+                this.targets = [];
+                this.moves = 0;
+                this.history = [];
+
+                this.init();
+            }
+
+            init() {
+                this.loadLevel(this.currentLevel);
+                this.bindEvents();
+            }
+
+            loadLevel(index) {
+                const level = this.levels[index];
+                this.currentLevel = index;
+                this.moves = 0;
+                this.history = [];
+                this.boxes = [];
+                this.targets = [];
+
+                document.getElementById('levelNum').textContent = index + 1;
+                document.getElementById('moves').textContent = 0;
+
+                this.board.style.gridTemplateColumns = `repeat(${level.width}, 40px)`;
+                this.board.innerHTML = '';
+
+                for (let y = 0; y < level.height; y++) {
+                    for (let x = 0; x < level.width; x++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.x = x;
+                        cell.dataset.y = y;
+
+                        const tile = level.map[y][x];
+
+                        switch (tile) {
+                            case 1:
+                                cell.classList.add('wall');
+                                break;
+                            case 2:
+                                cell.classList.add('floor');
+                                this.boxes.push({ x, y });
+                                cell.classList.add('box');
+                                break;
+                            case 3:
+                                cell.classList.add('floor');
+                                this.player = { x, y };
+                                cell.classList.add('player');
+                                break;
+                            case 4:
+                                cell.classList.add('target');
+                                this.targets.push({ x, y });
+                                break;
+                            case 5:
+                                cell.classList.add('target');
+                                this.boxes.push({ x, y });
+                                cell.classList.add('box-on-target');
+                                break;
+                            case 6:
+                                cell.classList.add('target');
+                                this.player = { x, y };
+                                cell.classList.add('player-on-target');
+                                break;
+                            default:
+                                cell.classList.add('floor');
+                        }
+
+                        this.board.appendChild(cell);
+                    }
+                }
+
+                document.getElementById('totalBoxes').textContent = this.boxes.length;
+                this.updateBoxesCount();
+            }
+
+            bindEvents() {
+                document.addEventListener('keydown', e => {
+                    const keyMap = {
+                        ArrowUp: 'up', w: 'up',
+                        ArrowDown: 'down', s: 'down',
+                        ArrowLeft: 'left', a: 'left',
+                        ArrowRight: 'right', d: 'right'
+                    };
+                    if (keyMap[e.key]) {
+                        e.preventDefault();
+                        this.move(keyMap[e.key]);
+                    }
+                });
+
+                document.querySelectorAll('.mobile-btn').forEach(btn => {
+                    btn.addEventListener('click', () => this.move(btn.dataset.dir));
+                });
+            }
+
+            move(dir) {
+                const dirs = {
+                    up: { dx: 0, dy: -1 },
+                    down: { dx: 0, dy: 1 },
+                    left: { dx: -1, dy: 0 },
+                    right: { dx: 1, dy: 0 }
+                };
+
+                const d = dirs[dir];
+                const nx = this.player.x + d.dx;
+                const ny = this.player.y + d.dy;
+
+                this.history.push({
+                    player: { ...this.player },
+                    boxes: JSON.parse(JSON.stringify(this.boxes)),
+                    moves: this.moves
+                });
+
+                const box = this.boxes.find(b => b.x === nx && b.y === ny);
+                if (box) {
+                    const bx = nx + d.dx;
+                    const by = ny + d.dy;
+
+                    if (
+                        this.boxes.some(b => b.x === bx && b.y === by) ||
+                        this.isWall(bx, by)
+                    ) return;
+
+                    box.x = bx;
+                    box.y = by;
+                }
+
+                if (this.isWall(nx, ny)) return;
+
+                this.player.x = nx;
+                this.player.y = ny;
+                this.moves++;
+                document.getElementById('moves').textContent = this.moves;
+
+                this.render();
+                this.checkWin();
+            }
+
+            isWall(x, y) {
+                return this.levels[this.currentLevel].map[y][x] === 1;
+            }
+
+            render() {
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.classList.remove('player', 'box', 'box-on-target');
+
+                    const x = +cell.dataset.x;
+                    const y = +cell.dataset.y;
+
+                    if (this.boxes.some(b => b.x === x && b.y === y)) {
+                        cell.classList.add(
+                            this.targets.some(t => t.x === x && t.y === y)
+                                ? 'box-on-target'
+                                : 'box'
+                        );
+                    }
+
+                    if (this.player.x === x && this.player.y === y) {
+                        cell.classList.add('player');
+                    }
+                });
+
+                this.updateBoxesCount();
+            }
+
+            updateBoxesCount() {
+                const done = this.boxes.filter(b =>
+                    this.targets.some(t => t.x === b.x && t.y === b.y)
+                ).length;
+                document.getElementById('completed').textContent = done;
+            }
+
+            checkWin() {
+                const win = this.boxes.every(b =>
+                    this.targets.some(t => t.x === b.x && t.y === b.y)
+                );
+
+                if (win) {
+                    document.getElementById('finalMoves').textContent = this.moves;
+                    document.getElementById('finalLevel').textContent = this.currentLevel + 1;
+                    document.getElementById('winMessage').classList.add('show');
+                }
+            }
+
+            restart() {
+                this.loadLevel(this.currentLevel);
+            }
+
+            undo() {
+                if (!this.history.length) return;
+                const s = this.history.pop();
+                this.player = s.player;
+                this.boxes = s.boxes;
+                this.moves = s.moves;
+                document.getElementById('moves').textContent = this.moves;
+                this.render();
+            }
+
+            nextLevel() {
+                this.loadLevel((this.currentLevel + 1) % this.levels.length);
+            }
+        }
+
+        const game = new SokobanGame();
+
+        function hideWinMessage() {
+            document.getElementById('winMessage').classList.remove('show');
+        }
+    </script>
 </body>
 </html>
