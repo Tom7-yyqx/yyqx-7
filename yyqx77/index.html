@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推箱子小游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>📦 推箱子 📦</h1>
+
+        <div class="info-panel">
+            <span class="level-info">关卡: <span id="levelNum">1</span></span>
+            <span class="moves-counter">步数: <span id="moves">0</span></span>
+            <span class="boxes-info">完成: <span id="completed">0</span>/<span id="totalBoxes">0</span></span>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="mobile-controls">
+            <button class="mobile-btn btn-primary up" data-dir="up">⬆️</button>
+            <button class="mobile-btn btn-primary left" data-dir="left">⬅️</button>
+            <button class="mobile-btn btn-primary right" data-dir="right">➡️</button>
+            <button class="mobile-btn btn-primary down" data-dir="down">⬇️</button>
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="game.restart()">🔄 重新开始</button>
+            <button class="btn-secondary" onclick="game.undo()">↩️ 撤销一步</button>
+            <button class="btn-success" onclick="game.nextLevel()">▶️ 下一关</button>
+        </div>
+
+        <div class="instructions">
+            <p>使用 <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> 或 <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> 移动</p>
+            <p>将箱子推到绿色目标位置即可过关！</p>
+        </div>
+    </div>
+
+    <div class="win-message" id="winMessage">
+        <div class="win-content">
+            <div class="emoji">🎉</div>
+            <h2>恭喜过关！</h2>
+            <p>步数: <span id="finalMoves">0</span></p>
+            <p>关卡: <span id="finalLevel">1</span></p>
+            <button class="btn-primary" onclick="game.nextLevel(); hideWinMessage()">
+                继续下一关 ➡️
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
